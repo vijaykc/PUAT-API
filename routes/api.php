@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,20 +11,25 @@ use Illuminate\Http\Request;
 | routes are loaded by the RouteServiceProvider within a group which
 | is assigned the "api" middleware group. Enjoy building your API!
 |
- */
+*/
 
-/* $router->group(['prefix' => 'api'], function () use ($router) {
-    $router->get('/', function () use ($router) {
-        return "API is working.";
-    });
+/*
+|--------------------------------------------------------------------------
+| Application Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register all of the routes for an application.
+| It is a breeze. Simply tell Lumen the URIs it should respond to
+| and give it the Closure to call when that URI is requested.
+|
+*/
 
-    
-});
- */
+/* $router->get('/', function () use ($router) {
+    return $router->app->version();
+}); */
 
- $router->group(['middleware' => 'auth'], function () use ($router) {
-    $router->get('/', 'MMController@index');
-    $router->get('lookupUser/{email}', 'MMController@show');
-    $router->post('addUser', 'MMController@store');
-    $router->delete('deleteUser/{email}', 'MMController@destroy');
-});
+/* $router->get('/', 'MMController@index');
+Route::get('lookupUser/{email}', 'MMController@show');
+Route::post('addUser', 'MMController@store');
+Route::put('updateUser/{email}', 'MMController@update');
+Route::delete('deleteUser/{email}', 'MMController@destroy'); */
