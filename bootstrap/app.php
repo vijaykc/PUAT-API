@@ -33,8 +33,6 @@ $app->configure('filesystems');
 
 $app->configure('auth');
 
-
-
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -64,7 +62,6 @@ $app->singleton('filesystem', function ($app) {
     );
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -89,7 +86,6 @@ $app->routeMiddleware([
     'client' => \Laravel\Passport\Http\Middleware\CheckClientCredentials::class,
 ]);
 
-
 /*
 |--------------------------------------------------------------------------
 | Register Service Providers
@@ -112,9 +108,7 @@ $app->register(Dusterio\LumenPassport\PassportServiceProvider::class);
 
 Dusterio\LumenPassport\LumenPassport::routes($app->router);
 
-
 // Dusterio\LumenPassport\LumenPassport::routes($app->router, ['prefix' => 'api/v1/oauth']);
-
 
 /*
 |--------------------------------------------------------------------------

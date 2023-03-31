@@ -123,14 +123,14 @@ return [
     'log' => env('APP_LOG', 'single'),
 
     'log_level' => env('APP_LOG_LEVEL', 'debug'),
-    
-    'api'   => [
-        'puat'  => [
-            'key'   => 'RR8XnkQ', // Staging:: 'c4fsjvix7o4',
-            'secret'=> 'DCTVL8e', // Staging:: 'da82zxokcjw',
-            'endpoint'  => 'https://www.puatrainingmembers.com/site/wp-content/plugins/membermouse/api/request.php', // Staging:: 'https://staging.puatrainingmembers.com/wp-content/plugins/membermouse/api/request.php'
+
+    'api' => [
+        'puat' => [
+            'key' => 'RR8XnkQ', // Staging:: 'c4fsjvix7o4',
+            'secret' => 'DCTVL8e', // Staging:: 'da82zxokcjw',
+            'endpoint' => 'https://www.puatrainingmembers.com/site/wp-content/plugins/membermouse/api/request.php', // Staging:: 'https://staging.puatrainingmembers.com/wp-content/plugins/membermouse/api/request.php'
         ],
-        'default'   => 'puat'
-    ]
+        'default' => 'puat',
+    ],
 
 ];

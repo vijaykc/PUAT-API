@@ -14,10 +14,10 @@ class Members extends Model
 
     public $fillable = [
         'id',
-    	'email',
+        'email',
         'user_id',
-    	'mm_user_id',
-    	'referer_url'
+        'mm_user_id',
+        'referer_url',
     ];
 
     public function user_id()
@@ -27,23 +27,23 @@ class Members extends Model
 
     public function getallMember($emailoruserid)
     {
-    	return $this->where('email', $emailoruserid)->orWhere('thirdrdparty_user_id', $emailoruserid)->get();
-    	// return $this->find('')
+        return $this->where('email', $emailoruserid)->orWhere('thirdrdparty_user_id', $emailoruserid)->get();
+        // return $this->find('')
     }
 
     public function getMember($emailoruserid)
     {
-    	return $this->where('email', $emailoruserid)->orWhere('thirdrdparty_user_id', $emailoruserid)->first();
-    	// return $this->find('')
+        return $this->where('email', $emailoruserid)->orWhere('thirdrdparty_user_id', $emailoruserid)->first();
+        // return $this->find('')
     }
 
     public function getMemberByMId($mmid, $emailoruserid)
     {
-        return $this->where('mm_user_id',$mmid)
-                    ->where(function($query) use ($emailoruserid) {
+        return $this->where('mm_user_id', $mmid)
+                    ->where(function ($query) use ($emailoruserid) {
                         $query->where('email', $emailoruserid)->orWhere('thirdrdparty_user_id', $emailoruserid)->first();
                     })
                     ->first();
-    	// return $this->find('')
+        // return $this->find('')
     }
 }

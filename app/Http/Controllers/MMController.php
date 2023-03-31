@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use GuzzleHttp\Client;
-
 use App\Members;
-
+use GuzzleHttp\Client;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\Str;
-
 
 class MMController extends Controller
 {
@@ -20,9 +15,8 @@ class MMController extends Controller
      *
      * @return void
      */
-
     protected $membership_level_id = 7;
-    
+
     public function __construct()
     {
         // $this->middleware('auth');
@@ -41,32 +35,32 @@ class MMController extends Controller
         foreach ($allmembers as $member) {
             $data[] = [
                 'email' => $user->email,
-                'user_id'    => $member->thirdrdparty_user_id,
-                'mmUserId'    => $member->mm_user_id,
-                'status'       => ($member->is_active == 'yes') ? 'Active' : 'Inactive',
-                'confirmationUrl'  => $member->confirmation_url
+                'user_id' => $member->thirdrdparty_user_id,
+                'mmUserId' => $member->mm_user_id,
+                'status' => ($member->is_active == 'yes') ? 'Active' : 'Inactive',
+                'confirmationUrl' => $member->confirmation_url,
             ];
         }
+
         return response()->json([
-            'data'  => $data
+            'data' => $data,
         ], 200);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
         $user = Auth::user();
-        if(!$user){
+        if (! $user) {
             return response()->json([
-                'message'  => 'Unauthorize Access'
+                'message' => 'Unauthorize Access',
             ], 402);
-        } 
-		
+        }
+
         $apiinfo = config('app.api');
         // dd($api['puat']);
         $user_id = $request->input('user_id');
@@ -77,40 +71,39 @@ class MMController extends Controller
         $membership_level_id = $request->input('membership_level_id');
         $ext_support_phone = $request->input('ext_support_phone');
         $ext_support_url = $request->input('ext_support_url');
-        
-        if($api_user == '')
+
+        if ($api_user == '') {
             $api_user = $apiinfo['default'];
+        }
 
-        if($membership_level_id == '')
+        if ($membership_level_id == '') {
             $membership_level_id = $this->membership_level_id;
-            
-        if($email && $user_id && $membership_level_id):
+        }
 
+        if ($email && $user_id && $membership_level_id) {
             $api = $apiinfo[$api_user];
             $member = new Members();
             $member = $member->getMember($email);
-            if(!$member)
+            if (! $member) {
                 $member = new Members();
-            
-            $member->email =$email;
+            }
+
+            $member->email = $email;
             $member->thirdrdparty_user_id = $user_id;
             $member->membership_level_id = $membership_level_id;
             $member->referer_url = $request->headers->get('referer');
             $member->save();
-			
-			if(isset($psd) && !empty($psd)){
-				$passowrd = $psd;
-			}
-			else{
-				$passowrd = Str::random(8);
-			}
-			      
-            
 
-            /* 
+            if (isset($psd) && ! empty($psd)) {
+                $passowrd = $psd;
+            } else {
+                $passowrd = Str::random(8);
+            }
+
+            /*
             generate puat_autologin_token
-            */            
-            $encrypt_method = "AES-256-CBC";
+            */
+            $encrypt_method = 'AES-256-CBC';
             $secret_key = 'puatapi_key';
             $secret_iv = 'puatapi_iv';
             // hash
@@ -120,32 +113,29 @@ class MMController extends Controller
             $autologintoken = openssl_encrypt($email, $encrypt_method, $key, 0, $iv);
             $autologintoken = base64_encode($autologintoken);
 
-
             $post = [
                 'email' => $email,
-                'password'  => $passowrd,
-                'custom_field_1'  => $passowrd, // site added mm_member_add hook have an issue
-                'membership_level_id'   => $membership_level_id,
-                'apikey'   => $api['key'],
-                'apisecret'   => $api['secret'],
-                'custom_field_3'    => $autologintoken, /* configured here ( https: //puatrainingmembers.com/site/wp-admin/admin.php?page=checkout_settings&module=custom_field ) */
-                'custom_field_4'    => $ext_support_phone,
-                'custom_field_5'    => $ext_support_url,
+                'password' => $passowrd,
+                'custom_field_1' => $passowrd, // site added mm_member_add hook have an issue
+                'membership_level_id' => $membership_level_id,
+                'apikey' => $api['key'],
+                'apisecret' => $api['secret'],
+                'custom_field_3' => $autologintoken, /* configured here ( https: //puatrainingmembers.com/site/wp-admin/admin.php?page=checkout_settings&module=custom_field ) */
+                'custom_field_4' => $ext_support_phone,
+                'custom_field_5' => $ext_support_url,
             ];
-			
-			if(isset($username) && !empty($username)){
-			
-				$post['username'] = $username;
-			
-			}
+
+            if (isset($username) && ! empty($username)) {
+                $post['username'] = $username;
+            }
 
             try {
                 $client = new Client();
                 $createTrans = $client->post(
                     $api['endpoint'].'?q=/createMember',
-                    array(
+                    [
                         'form_params' => $post,
-                    )
+                    ]
                 );
 
                 $getResponse = json_decode($createTrans->getBody()->getContents());
@@ -156,13 +146,14 @@ class MMController extends Controller
                     $response_data = $getResponse->response_data;
                     $member->mm_user_id = $response_data->member_id;
                     // $member->confirmation_url = $response_data->confirmationUrl;
-                    $confirmationUrl = 'https://www.puatrainingmembers.com/site/?autologtok=' . $autologintoken.'&autologuid='.$response_data->member_id;
-                    if(!$member->confirmation_url || $member->confirmation_url == NULL)
+                    $confirmationUrl = 'https://www.puatrainingmembers.com/site/?autologtok='.$autologintoken.'&autologuid='.$response_data->member_id;
+                    if (! $member->confirmation_url || $member->confirmation_url == null) {
                         $member->confirmation_url = $confirmationUrl;
+                    }
 
                     $member->user_id = $user->id;
                     $member->save();
-                    
+
                     $data = [
                         'member_id' => $response_data->member_id,
                         'username' => $response_data->username,
@@ -170,29 +161,27 @@ class MMController extends Controller
                         'password' => $response_data->password,
                         'confirmationUrl' => $member->confirmation_url,
                     ];
-                    return response()->json([
-                        'data'  => $data,
-                    ], 200);
 
-                }else {
                     return response()->json([
-                        'message'  => $response_message
+                        'data' => $data,
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'message' => $response_message,
                     ], $responseCode);
                 }
-
-            }catch(\Exception $exc) {
+            } catch(\Exception $exc) {
                 $erromsge = $exc->getMessage();
-                
+
                 return response()->json([
                     'message' => $erromsge,
                 ], 500);
             }
-        else:
+        } else {
             return response()->json([
                 'message' => 'Submission Error. Please check posted data.',
             ], 400);
-        endif;
-
+        }
     }
 
     /**
@@ -207,20 +196,21 @@ class MMController extends Controller
         $members = $members->getallMember($emailoruserid);
         $return = [];
         if ($members) {
-            foreach ($members as $member ) {
-                if ($member->is_active == 'no') :
+            foreach ($members as $member) {
+                if ($member->is_active == 'no') {
                     $return[] = [
-                        'email'     => $member->email,
-                        'status'    => 'Member Not Active !!!',
-                    ];                
-                else :
-                    $return[] = [
-                        'email'             => $member->email,
-                        'mmUserId'          => $member->mm_user_id,
-                        'confirmationUrl'  => $member->confirmation_url
+                        'email' => $member->email,
+                        'status' => 'Member Not Active !!!',
                     ];
-                endif;
+                } else {
+                    $return[] = [
+                        'email' => $member->email,
+                        'mmUserId' => $member->mm_user_id,
+                        'confirmationUrl' => $member->confirmation_url,
+                    ];
+                }
             }
+
             return response()->json($return, 200);
         } else {
             return response()->json([
@@ -243,18 +233,15 @@ class MMController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $email)
     {
-        if(filter_var($email, FILTER_VALIDATE_EMAIL))
-        {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $members = new Members();
             $members = $members->getMember($email);
-            if($members)
-            {
+            if ($members) {
                 $return = [];
                 foreach ($members as $key => $member) {
                     $membership_level_id = $request->input('membership_level_id');
@@ -263,10 +250,11 @@ class MMController extends Controller
 
                     $apiinfo = config('app.api');
                     $user_id = isset($user_id) ? $user_id : $member->thirdrdparty_user_id;
-                    if(!array_key_exists($user_id, $apiinfo))
+                    if (! array_key_exists($user_id, $apiinfo)) {
                         return response()->json([
-                        'message' => '3rd Party User Id not found!!!',
+                            'message' => '3rd Party User Id not found!!!',
                         ], 200);
+                    }
 
                     $api = $apiinfo[$user_id];
                     $post = [
@@ -278,13 +266,12 @@ class MMController extends Controller
                     ];
 
                     try {
-
                         $client = new Client();
                         $createTrans = $client->post(
                             $api['endpoint'].'?q=/updateMember',
-                            array(
+                            [
                                 'form_params' => $post,
-                            )
+                            ]
                         );
 
                         $getResponse = json_decode($createTrans->getBody()->getContents());
@@ -294,32 +281,26 @@ class MMController extends Controller
                         if ($createTrans->getStatusCode() == 200) {
                             $member->membership_level_id = $membership_level_id;
                             $member->thirdrdparty_user_id = $user_id;
-                            $member->is_active= 'yes';
+                            $member->is_active = 'yes';
                             $member->save();
 
                             $return[$member->email] = 'Member Updated';
-
-                        }else {
+                        } else {
                             $return[$member->email] = $response_message;
                         }
-
-                    }catch(\Exception $exc) {
+                    } catch(\Exception $exc) {
                         $erromsge = $exc->getMessage();
                         $return[$member->email] = $erromsge;
                     }
                 }
+
                 return response()->json($return, 200);
-            }
-            else 
-            {
+            } else {
                 return response()->json([
-                'message' => 'Member Not found !!!',
+                    'message' => 'Member Not found !!!',
                 ], 200);
             }
-            
-        }
-        else 
-        {
+        } else {
             return response()->json([
                 'message' => 'Invalid E-mail Address.',
             ], 400);
@@ -336,69 +317,64 @@ class MMController extends Controller
     {
         /* if(filter_var($email, FILTER_VALIDATE_EMAIL))
         { */
-            $members = new Members();
-            $apiinfo = config('app.api');
-            $api_user = $request->input('api_user');
+        $members = new Members();
+        $apiinfo = config('app.api');
+        $api_user = $request->input('api_user');
 
-            if($api_user == ''){
-                $api_user = $apiinfo['default'];
-            }
-            $members = $members->getallMember($emailoruserid);
-            // dd($members);
-            if($members)
-            {
-                $return = [];
-                foreach ($members as $member) {
-                    $api = $apiinfo[$api_user];
-                    $post = [
-                        'email' => $member->email,
-                        'membership_level_id' => $member->membership_level_id,
-                        'member_id' => $member->mm_user_id,
-                        'status' => 2, // 1 (Active), 2 (Cancelled), 3 (Locked), 4 (Paused), 5 (Overdue)
-                        'apikey' => $api['key'],
-                        'apisecret' => $api['secret'],
-                    ];
+        if ($api_user == '') {
+            $api_user = $apiinfo['default'];
+        }
+        $members = $members->getallMember($emailoruserid);
+        // dd($members);
+        if ($members) {
+            $return = [];
+            foreach ($members as $member) {
+                $api = $apiinfo[$api_user];
+                $post = [
+                    'email' => $member->email,
+                    'membership_level_id' => $member->membership_level_id,
+                    'member_id' => $member->mm_user_id,
+                    'status' => 2, // 1 (Active), 2 (Cancelled), 3 (Locked), 4 (Paused), 5 (Overdue)
+                    'apikey' => $api['key'],
+                    'apisecret' => $api['secret'],
+                ];
 
+                try {
+                    $client = new Client();
+                    $createTrans = $client->post(
+                        $api['endpoint'].'?q=/updateMember',
+                        [
+                            'form_params' => $post,
+                        ]
+                    );
 
-                    try {
-                        $client = new Client();
-                        $createTrans = $client->post(
-                            $api['endpoint'].'?q=/updateMember',
-                            array(
-                                'form_params' => $post,
-                            )
-                        );
+                    $getResponse = json_decode($createTrans->getBody()->getContents());
+                    $responseCode = $getResponse->response_code;
+                    $response_message = $getResponse->response_message;
 
-                        $getResponse = json_decode($createTrans->getBody()->getContents());
-                        $responseCode = $getResponse->response_code;
-                        $response_message = $getResponse->response_message;
+                    if ($createTrans->getStatusCode() == 200) {
+                        $member->is_active = 'no';
+                        $member->save();
 
-                        if ($createTrans->getStatusCode() == 200) {
-                            $member->is_active= 'no';
-                            $member->save();
-
-                            $return[$member->email] = 'Member De-activated';
-
-                        }else {
-                            $return[$member->email] = $response_message;
-                        }
-
-                    }catch(\Exception $exc) {
-                        $erromsge = $exc->getMessage();
-                        $return[$member->email] = $erromsge;
+                        $return[$member->email] = 'Member De-activated';
+                    } else {
+                        $return[$member->email] = $response_message;
                     }
+                } catch(\Exception $exc) {
+                    $erromsge = $exc->getMessage();
+                    $return[$member->email] = $erromsge;
                 }
-                return response()->json($return, 200);
             }
-            else 
-            {
-                return response()->json([
+
+            return response()->json($return, 200);
+        } else {
+            return response()->json([
                 'message' => 'Member Not found !!!',
             ], 200);
-            }
-            
+        }
+
         /* }
-        else 
+        else
         {
             return response()->json([
                 'message' => 'Invalid E-mail Address.',

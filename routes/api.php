@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -18,11 +16,11 @@ use Illuminate\Http\Request;
         return "API is working.";
     });
 
-    
+
 });
  */
 
- $router->group(['middleware' => 'auth'], function () use ($router) {
+$router->group(['middleware' => 'auth'], function () use ($router) {
     $router->get('/', 'MMController@index');
     $router->get('lookupUser/{email}', 'MMController@show');
     $router->post('addUser', 'MMController@store');
